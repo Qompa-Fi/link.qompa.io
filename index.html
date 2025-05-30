@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargar Qompa</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        .app-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 27px;
+            margin: 0 auto 30px;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .app-icon svg {
+            width: 70px;
+            height: 70px;
+            fill: white;
+        }
+        .app-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 40px;
+        }
+        .download-btn {
+            display: block;
+            width: 100%;
+            padding: 18px 24px;
+            margin: 15px 0;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .download-btn:hover {
+            background: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        .download-btn:active {
+            transform: translateY(0);
+        }
+        .loading { display: none; margin: 20px 0; }
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #333;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .auto-redirect { font-size: 14px; color: #666; margin-top: 20px; }
+        .manual-buttons { display: none; }
+        @media (max-width: 480px) {
+            .container { padding: 30px 20px; }
+            .app-icon { width: 100px; height: 100px; }
+            .app-icon svg { width: 60px; height: 60px; }
+            .app-title { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-icon">
+            <!-- Icono Qompa SVG simple de ejemplo -->
+            <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+            </svg>
+        </div>
+        <h1 class="app-title">Descargar Qompa</h1>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="auto-redirect">Redirigiendo automáticamente...</p>
+        </div>
+        <div class="manual-buttons" id="manualButtons">
+            <a href="#" class="download-btn" id="androidBtn">Android</a>
+            <a href="#" class="download-btn" id="iosBtn">iOS</a>
+        </div>
+    </div>
+    <script>
+        const APP_URLS = {
+            android: 'https://play.google.com/store/apps/details?id=com.qompa.app',
+            ios: 'https://apps.apple.com/pe/app/qompa-app/id6740096631',
+            web: 'https://qompa.io'
+        };
+
+        function detectDevice() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) return 'ios';
+            if (/android/i.test(userAgent)) return 'android';
+            return 'web';
+        }
+
+        function autoRedirect() {
+            const device = detectDevice();
+            const url = APP_URLS[device];
+            document.getElementById('loading').style.display = 'block';
+            setTimeout(() => {
+                window.location.href = url;
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('manualButtons').style.display = 'block';
+                }, 3000);
+            }, 1500);
+        }
+
+        function setupManualButtons() {
+            document.getElementById('androidBtn').href = APP_URLS.android;
+            document.getElementById('iosBtn').href = APP_URLS.ios;
+        }
+
+        function tryNativeApp() {
+            const device = detectDevice();
+            if (device === 'ios') {
+                window.location.href = 'qompa://';
+                setTimeout(() => { window.location.href = APP_URLS.ios; }, 2000);
+            } else if (device === 'android') {
+                window.location.href = 'intent://qompa.io#Intent;scheme=https;package=com.qompa.app;end';
+                setTimeout(() => { window.location.href = APP_URLS.android; }, 2000);
+            } else {
+                window.location.href = APP_URLS.web;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupManualButtons();
+            const urlParams = new URLSearchParams(window.location.search);
+            const autoParam = urlParams.get('auto');
+            if (autoParam !== 'false') {
+                tryNativeApp();
+                setTimeout(autoRedirect, 1000);
+            } else {
+                document.getElementById('manualButtons').style.display = 'block';
+            }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('manualButtons').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
